@@ -16,3 +16,4 @@ __pycache__/
 secrets*
 .coverage
 htmlcov/
+.claude/worktrees/
