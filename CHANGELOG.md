@@ -15,6 +15,8 @@
 - MCP tools for local info, issues, repo PRs and PR detail (input-validated, read-only).
 - `Config.roots` (default `~/src`): where to look for local clones.
 
+- `scripts/install.sh`: idempotent installer (`--git`, `--install-uv`, `--dry-run`, `--uninstall`).
+
 ### Fixed
 - `gmac auth login` always exited 1 after a successful login (`typer.Exit` is a `RuntimeError`).
 - PR titles, repo names and errors containing `[brackets]` were swallowed as Rich markup (CLI) or could crash/blank (TUI).

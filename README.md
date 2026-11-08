@@ -17,13 +17,16 @@ through a CLI, a TUI and an MCP server. All three are thin wrappers over one cor
 
 ## Install
 
-One command puts `gmac` on your PATH (needs [uv](https://docs.astral.sh/uv/), which fetches Python and all dependencies itself):
-
 ```bash
-uv tool install --editable .      # from a clone; later: uv tool upgrade gmac
-# or straight from GitHub, no clone:
-uv tool install git+https://github.com/bsommers/github-manager
+scripts/install.sh                 # from a clone: puts `gmac` on your PATH (editable)
+scripts/install.sh --install-uv    # same, installing uv first if you don't have it
+scripts/install.sh --git           # from GitHub, no clone (--git v0.1.0 for a tag)
+scripts/install.sh --dry-run       # show what would happen; --uninstall removes it
 ```
+
+It wraps `uv tool install` (uv supplies Python and all dependencies), never touches credentials, and prints
+your login status at the end. Re-run it after pulling to pick up new dependencies. Manual equivalent:
+`uv tool install --editable --force .`
 
 ## Quickstart
 
