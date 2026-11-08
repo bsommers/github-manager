@@ -135,6 +135,28 @@ def mcp(
     server.run(transport="http") if http else server.run()
 
 
+@app.command()
+def gui(
+    host: Annotated[str, typer.Option("--host", help="Interface to bind.")] = "127.0.0.1",
+    port: Annotated[int, typer.Option("--port", help="TCP port.")] = 8765,
+    no_open: Annotated[bool, typer.Option("--no-open", help="Do not open a browser.")] = False,
+) -> None:
+    """Local read-only web GUI (default http://127.0.0.1:8765)."""
+    import webbrowser
+
+    import uvicorn
+
+    from .api import create_app
+
+    api = create_app(_load())
+    shown = f"[{host}]" if ":" in host else host
+    url = f"http://{shown}:{port}/"
+    out.print(f"GMAC GUI at {url} (Ctrl+C to stop)")
+    if not no_open:
+        webbrowser.open(url)
+    uvicorn.run(api, host=host, port=port, log_level="warning")
+
+
 ProviderOpt = Annotated[str, typer.Option("--provider", "-p", help="github or gitlab")]
 
 
