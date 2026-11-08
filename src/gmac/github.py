@@ -4,13 +4,17 @@ from typing import Any
 
 import httpx
 
-from .models import PullRequest, Repo, Source
+from .models import Issue, PullDetail, PullRequest, Repo, Source
 
 API = "https://api.github.com"
 
 
 class GitHubError(RuntimeError):
     pass
+
+
+def _login(user: dict | None) -> str:
+    return (user or {}).get("login", "ghost")  # deleted accounts come back as null
 
 
 class GitHub:
@@ -88,10 +92,59 @@ class GitHub:
                 repo=i["repository_url"].removeprefix(f"{API}/repos/"),
                 number=i["number"],
                 title=i["title"],
-                author=i["user"]["login"],
+                author=_login(i["user"]),
                 draft=i.get("draft", False),
                 updated_at=i["updated_at"],
                 url=i["html_url"],
             )
             for i in raw
         ]
+
+    async def issues(self, repo: str, limit: int = 200) -> list[Issue]:
+        raw = await self._paged(f"/repos/{repo}/issues", limit, state="open", sort="updated")
+        return [
+            Issue(
+                repo=repo,
+                number=i["number"],
+                title=i["title"],
+                author=_login(i["user"]),
+                labels=[lbl["name"] for lbl in i["labels"]],
+                comments=i["comments"],
+                body=i["body"] or "",
+                updated_at=i["updated_at"],
+                url=i["html_url"],
+            )
+            for i in raw
+            if "pull_request" not in i  # the issues endpoint also returns PRs
+        ]
+
+    async def repo_pulls(self, repo: str, limit: int = 200) -> list[PullDetail]:
+        raw = await self._paged(
+            f"/repos/{repo}/pulls", limit, state="open", sort="updated", direction="desc"
+        )
+        return [self._pull(repo, p) for p in raw]
+
+    async def pull(self, repo: str, number: int) -> PullDetail:
+        return self._pull(repo, await self._get(f"/repos/{repo}/pulls/{number}"))
+
+    @staticmethod
+    def _pull(repo: str, p: dict) -> PullDetail:
+        return PullDetail(
+            repo=repo,
+            number=p["number"],
+            title=p["title"],
+            author=_login(p["user"]),
+            draft=p.get("draft", False),
+            updated_at=p["updated_at"],
+            url=p["html_url"],
+            head=p["head"]["ref"],
+            base=p["base"]["ref"],
+            body=p.get("body") or "",
+            created_at=p.get("created_at"),
+            additions=p.get("additions", 0),
+            deletions=p.get("deletions", 0),
+            changed_files=p.get("changed_files", 0),
+            commits=p.get("commits", 0),
+            comments=p.get("comments", 0) + p.get("review_comments", 0),
+            mergeable_state=p.get("mergeable_state") or "",
+        )

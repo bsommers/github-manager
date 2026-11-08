@@ -22,6 +22,7 @@ class ConfigError(ValueError):
 
 class Config(BaseModel):
     sources: list[Source] = Field(default_factory=list)
+    roots: list[str] = Field(default_factory=lambda: ["~/src"])  # where to look for local clones
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:
