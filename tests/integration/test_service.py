@@ -121,3 +121,23 @@ async def test_tui_renders_bracket_titles_literally(monkeypatch):
         table = app.query_one("#pr-table")
         assert app.sub_title.startswith("0 repos")
         assert table.get_row_at(0)[2].plain == "[WIP] [/bad] x"
+
+
+async def test_ctrl_p_toggles_command_palette(monkeypatch):
+    from textual.command import CommandPalette
+
+    from gmac import tui
+
+    async def empty(cfg, *a, **k):
+        return []
+
+    monkeypatch.setattr(tui.service, "list_repos", empty)
+    monkeypatch.setattr(tui.service, "list_pulls", empty)
+    app = tui.GmacApp(CFG)
+    async with app.run_test() as pilot:
+        await pilot.press("ctrl+p")
+        await pilot.pause(0.2)
+        assert CommandPalette.is_open(app)
+        await pilot.press("ctrl+p")
+        await pilot.pause(0.2)
+        assert not CommandPalette.is_open(app)

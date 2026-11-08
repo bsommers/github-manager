@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rich.text import Text
 from textual.app import App, ComposeResult
+from textual.command import CommandPalette
 from textual.widgets import DataTable, Footer, Header, TabbedContent, TabPane
 
 from . import service
@@ -15,6 +16,13 @@ class GmacApp(App):
     def __init__(self, cfg: Config):
         super().__init__()
         self.cfg = cfg
+
+    def action_command_palette(self) -> None:
+        """Ctrl+P toggles the palette (Textual's default only opens it; Esc also closes it)."""
+        if CommandPalette.is_open(self):
+            self.screen.dismiss(None)
+        else:
+            super().action_command_palette()
 
     def compose(self) -> ComposeResult:
         yield Header()
