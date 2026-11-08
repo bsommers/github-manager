@@ -64,3 +64,60 @@ async def test_tui_loads_tables(monkeypatch, gh):
         assert app.sub_title.startswith("2 repos"), app.sub_title
         assert app.query_one("#repo-table").row_count == 2
         assert app.query_one("#pr-table").row_count == 2
+
+
+async def test_tui_shows_error_in_subtitle(monkeypatch):
+    from gmac import tui
+
+    async def boom(*a, **k):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(tui.service, "list_repos", boom)
+    app = tui.GmacApp(CFG)
+    async with app.run_test() as pilot:
+        await pilot.pause(0.3)
+        assert app.sub_title == "error: offline"
+
+
+async def test_tui_refresh_key_reloads(monkeypatch, gh):
+    from gmac import tui
+
+    real_repos, real_pulls = service.list_repos, service.list_pulls
+    loads = []
+
+    async def repos(cfg, *a, **k):
+        loads.append(1)
+        return await real_repos(cfg, gh=gh)
+
+    async def pulls(cfg, *a, **k):
+        return await real_pulls(cfg, gh=gh)
+
+    monkeypatch.setattr(tui.service, "list_repos", repos)
+    monkeypatch.setattr(tui.service, "list_pulls", pulls)
+    app = tui.GmacApp(CFG)
+    async with app.run_test() as pilot:
+        await pilot.pause(0.3)
+        await pilot.press("r")
+        await pilot.pause(0.3)
+        assert len(loads) == 2
+        assert app.query_one("#repo-table").row_count == 2  # cleared, not duplicated
+
+
+async def test_tui_renders_bracket_titles_literally(monkeypatch):
+    from gmac import tui
+    from gmac.models import PullRequest
+
+    async def repos(cfg, *a, **k):
+        return []
+
+    async def pulls(cfg, *a, **k):
+        return [PullRequest(repo="o/r", number=1, title="[WIP] [/bad] x", author="a")]
+
+    monkeypatch.setattr(tui.service, "list_repos", repos)
+    monkeypatch.setattr(tui.service, "list_pulls", pulls)
+    app = tui.GmacApp(CFG)
+    async with app.run_test() as pilot:
+        await pilot.pause(0.4)
+        table = app.query_one("#pr-table")
+        assert app.sub_title.startswith("0 repos")
+        assert table.get_row_at(0)[2].plain == "[WIP] [/bad] x"

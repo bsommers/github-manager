@@ -5,10 +5,11 @@ from typing import Annotated
 
 import typer
 from rich.console import Console
+from rich.markup import escape
 from rich.table import Table
 
 from . import auth, service
-from .config import Config, config_path
+from .config import Config, ConfigError, config_path
 from .models import Source
 
 app = typer.Typer(no_args_is_help=True, help="GMAC: Git Manager Admin Console.")
@@ -25,11 +26,19 @@ SourceOpt = Annotated[str | None, typer.Option("--source", "-s", help="Limit to 
 JsonOpt = Annotated[bool, typer.Option("--json", help="Machine-readable output.")]
 
 
+def _load() -> Config:
+    try:
+        return Config.load()
+    except ConfigError as e:
+        err.print(f"[red]error:[/red] {escape(str(e))}")
+        raise typer.Exit(1) from e
+
+
 def _run(coro):
     try:
         return asyncio.run(coro)
     except Exception as e:  # surface as a clean CLI error, not a traceback
-        err.print(f"[red]error:[/red] {e}")
+        err.print(f"[red]error:[/red] {escape(str(e))}")
         raise typer.Exit(1) from e
 
 
@@ -43,14 +52,14 @@ def sources_add(
     if provider == "gitlab":
         err.print("[red]gitlab sources are specced (docs/SPEC.md §6) but not implemented yet[/red]")
         raise typer.Exit(2)
-    cfg = Config.load()
+    cfg = _load()
     cfg.add(Source(name=name, kind="org" if org else "user", provider=provider))
     out.print(f"saved to {cfg.save()}")
 
 
 @sources_app.command("remove")
 def sources_remove(name: str) -> None:
-    cfg = Config.load()
+    cfg = _load()
     if not cfg.remove(name):
         err.print(f"[red]not tracked:[/red] {name}")
         raise typer.Exit(1)
@@ -59,7 +68,7 @@ def sources_remove(name: str) -> None:
 
 @sources_app.command("list")
 def sources_list() -> None:
-    cfg = Config.load()
+    cfg = _load()
     for s in cfg.sources:
         out.print(f"{s.kind:5} {s.name}")
     if not cfg.sources:
@@ -73,15 +82,15 @@ def repos(
     as_json: JsonOpt = False,
 ) -> None:
     """List repos across all tracked sources, most recently pushed first."""
-    rows = _run(service.list_repos(Config.load(), source, archived))
+    rows = _run(service.list_repos(_load(), source, archived))
     if as_json:
         typer.echo("[" + ",".join(r.model_dump_json() for r in rows) + "]")
         return
     t = Table("repo", "lang", "★", "issues", "pushed")
     for r in rows:
         t.add_row(
-            r.full_name + (" 🔒" if r.private else ""),
-            r.language or "",
+            escape(r.full_name) + (" 🔒" if r.private else ""),
+            escape(r.language or ""),
             str(r.stars),
             str(r.open_issues),
             r.pushed_at.strftime("%Y-%m-%d") if r.pushed_at else "",
@@ -92,17 +101,17 @@ def repos(
 @app.command()
 def prs(source: SourceOpt = None, as_json: JsonOpt = False) -> None:
     """List open PRs across all tracked sources, most recently updated first."""
-    rows = _run(service.list_pulls(Config.load(), source))
+    rows = _run(service.list_pulls(_load(), source))
     if as_json:
         typer.echo("[" + ",".join(p.model_dump_json() for p in rows) + "]")
         return
     t = Table("repo", "#", "title", "author", "updated")
     for p in rows:
         t.add_row(
-            p.repo,
+            escape(p.repo),
             str(p.number),
-            p.title + (" [draft]" if p.draft else ""),
-            p.author,
+            escape(p.title) + (" \\[draft]" if p.draft else ""),
+            escape(p.author),
             p.updated_at.strftime("%Y-%m-%d") if p.updated_at else "",
         )
     out.print(t)
@@ -113,7 +122,7 @@ def tui() -> None:
     """Interactive terminal UI."""
     from .tui import GmacApp
 
-    GmacApp(Config.load()).run()
+    GmacApp(_load()).run()
 
 
 @app.command()
@@ -156,10 +165,11 @@ def auth_login(
         out.print("stored in OS keychain")
         return
     try:
-        raise typer.Exit(auth.cli_login(provider))
+        code = auth.cli_login(provider)
     except RuntimeError as e:
-        err.print(f"[red]{e}[/red]")
+        err.print(f"[red]{escape(str(e))}[/red]")
         raise typer.Exit(1) from e
+    raise typer.Exit(code)  # outside the try: typer.Exit is itself a RuntimeError
 
 
 @auth_app.command("logout")

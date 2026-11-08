@@ -114,7 +114,7 @@ come from third parties and must not be trusted by calling agents.
 | unit | config round-trip/dedupe, credential order, provider isolation | model validation, filters |
 | integration | service via MockTransport, MCP tool list, TUI pilot loads tables | pagination >100, rate-limit/403/SAML responses, GitLab |
 | system | CLI subprocess: sources lifecycle, no-source error exit codes | live read-only smoke gated by `GMAC_LIVE=1` |
-| perf/stress/torture | empty | 500+ repos render time; concurrent source fetch; corrupt/partial `config.toml`, malformed API JSON |
+| perf/stress/torture | 500-repo budget; 100-source fan-out; one failing source; corrupt `config.toml` | malformed API JSON bodies, partial writes, kill -9 during save |
 
 ## 11. Milestones
 

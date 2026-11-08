@@ -34,7 +34,11 @@ class GitHub:
     async def _get(self, path: str, **params: Any) -> Any:
         r = await self._http.get(path, params=params)
         if r.status_code >= 400:
-            raise GitHubError(f"{r.status_code} on {path}: {r.json().get('message', r.text)}")
+            try:
+                detail = r.json().get("message", r.text)
+            except ValueError:  # e.g. an HTML 502 page
+                detail = r.text[:200]
+            raise GitHubError(f"{r.status_code} on {path}: {detail}")
         return r.json()
 
     async def _paged(self, path: str, limit: int, **params: Any) -> list[Any]:

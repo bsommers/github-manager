@@ -6,7 +6,7 @@ from pathlib import Path
 
 import tomli_w
 from platformdirs import user_config_dir
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from .models import Source
 
@@ -14,6 +14,10 @@ from .models import Source
 def config_path() -> Path:
     override = os.environ.get("GMAC_CONFIG")
     return Path(override) if override else Path(user_config_dir("gmac")) / "config.toml"
+
+
+class ConfigError(ValueError):
+    """config.toml exists but cannot be used."""
 
 
 class Config(BaseModel):
@@ -24,7 +28,10 @@ class Config(BaseModel):
         path = path or config_path()
         if not path.exists():
             return cls()
-        return cls.model_validate(tomllib.loads(path.read_text()))
+        try:
+            return cls.model_validate(tomllib.loads(path.read_text()))
+        except (tomllib.TOMLDecodeError, ValidationError, UnicodeDecodeError) as e:
+            raise ConfigError(f"cannot read {path}: {e}") from e
 
     def save(self, path: Path | None = None) -> Path:
         path = path or config_path()

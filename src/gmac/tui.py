@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Footer, Header, TabbedContent, TabPane
 
@@ -50,19 +51,29 @@ class GmacApp(App):
         pt.clear()
         for r in repos:
             rt.add_row(
-                r.full_name,
-                r.language or "",
-                str(r.stars),
-                str(r.open_issues),
-                r.pushed_at.strftime("%Y-%m-%d") if r.pushed_at else "",
+                *map(
+                    Text,
+                    (
+                        r.full_name,
+                        r.language or "",
+                        str(r.stars),
+                        str(r.open_issues),
+                        r.pushed_at.strftime("%Y-%m-%d") if r.pushed_at else "",
+                    ),
+                )
             )
         for p in prs:
             pt.add_row(
-                p.repo,
-                str(p.number),
-                p.title,
-                p.author,
-                p.updated_at.strftime("%Y-%m-%d") if p.updated_at else "",
+                *map(
+                    Text,
+                    (
+                        p.repo,
+                        str(p.number),
+                        p.title,
+                        p.author,
+                        p.updated_at.strftime("%Y-%m-%d") if p.updated_at else "",
+                    ),
+                )
             )
         self.sub_title = (
             f"{len(repos)} repos · {len(prs)} open PRs · {len(self.cfg.sources)} sources"
