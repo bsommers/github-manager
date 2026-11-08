@@ -13,7 +13,7 @@ from .models import GitStatus, LocalInfo
 SKIP = {"node_modules", ".venv", "venv", "target", "__pycache__", ".cache", "Library"}
 _REMOTE = re.compile(r"[:/]([^/:]+)/([^/]+?)(?:\.git)?/?$")
 _BRANCH = re.compile(
-    r"^## (?:No commits yet on |Initial commit on )?(?P<b>[^. ]+(?:\.[^. ]+)*?)"
+    r"^## (?:No commits yet on |Initial commit on )?(?P<b>HEAD \(no branch\)|[^. ]+(?:\.[^. ]+)*?)"
     r"(?:\.\.\.\S+)?(?: \[(?P<t>[^\]]+)\])?$"
 )
 
