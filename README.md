@@ -32,6 +32,7 @@ gmac auth status                    # reuses gh/glab login, env tokens or keycha
 gmac auth login                     # browser login via gh (-p gitlab for glab)
 gmac sources add <your-user>        # add --org for organizations
 gmac repos                          # or: gmac prs, gmac tui
+gmac gui                            # local web UI at http://127.0.0.1:8765 (read-only)
 gmac mcp                            # stdio MCP server
 scripts/verify.sh --quick
 ```

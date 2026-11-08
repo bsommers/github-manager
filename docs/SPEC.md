@@ -80,14 +80,14 @@ Acceptance: same CLI/TUI/MCP output shape for both providers, tests via MockTran
 | F3 | List open PRs across all sources, newest update first | done |
 | F4 | `--json` output on list commands for scripting/agents | done |
 | F5 | TUI: Repos and PR tabs, refresh `r`, quit `q`, status line with counts | done |
-| F6 | MCP tools: `list_sources`, `list_repos`, `list_pull_requests` (stdio; `--http`) | done |
+| F6 | MCP tools: `list_sources`, `list_repos`, `list_pull_requests`, `repo_local_info`, `list_issues`, `list_repo_pull_requests`, `get_pull_request` (read-only; stdio, `--http`) | done |
 | F7 | PR review status (approved / changes requested / CI state) per PR | next |
 | F8 | Local SQLite cache with TTL and ETag conditional requests (rate limits, speed) | next |
 | F9 | Filters: language, stale >N days, has-open-PRs, fork, private | next |
-| F10 | TUI: Enter opens URL, `/` filter, source switcher, detail pane | next |
+| F10 | TUI drill-downs: Enter on repo opens detail (local dir, remote, git status, issues); Enter on PR lists the repo's PRs then PR details; clickable URLs, scrolling | done (filter and source switcher next) |
 | F11 | `gmac doctor`: auth, scopes, SAML, rate limit, config checks | next |
 | F12 | Write actions (comment, merge, label) behind explicit confirmation + MCP annotations | later |
-| F13 | HTTP API (FastAPI) and web UI sharing `service.py` | later |
+| F13 | Local read-only JSON API (FastAPI) and web UI (`gmac gui`, 127.0.0.1, Host-header check, CSP) sharing `service.py` | done (hosted/remote mode later) |
 | F14 | Agent coordination: claims/locks on PRs or repos so agents don't collide | later |
 
 ## 8. Non-functional requirements

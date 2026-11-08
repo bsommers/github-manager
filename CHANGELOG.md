@@ -9,6 +9,12 @@
 - Credential chain env > keychain > gh/glab; `gmac auth status|login|logout`.
 - Docs: `docs/SPEC.md`, `docs/ARCHITECTURE.md`, ADR 0001; docs-sync test.
 
+### Added (drill-downs)
+- TUI: scrolling tables; Enter on a repo shows local clone dir, remote, git status and drills into issues; Enter on a PR lists the repo's PRs then PR details; clickable URLs; `Ctrl+P` toggles the palette.
+- `gmac gui`: local read-only web UI and JSON API (loopback only, Host check, CSP).
+- MCP tools for local info, issues, repo PRs and PR detail (input-validated, read-only).
+- `Config.roots` (default `~/src`): where to look for local clones.
+
 ### Fixed
 - `gmac auth login` always exited 1 after a successful login (`typer.Exit` is a `RuntimeError`).
 - PR titles, repo names and errors containing `[brackets]` were swallowed as Rich markup (CLI) or could crash/blank (TUI).
