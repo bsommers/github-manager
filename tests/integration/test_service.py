@@ -39,7 +39,15 @@ async def test_mcp_tools_registered():
 
     async with Client(server) as c:
         names = {t.name for t in await c.list_tools()}
-    assert names == {"list_sources", "list_repos", "list_pull_requests"}
+    assert names == {
+        "list_sources",
+        "list_repos",
+        "list_pull_requests",
+        "repo_local_info",
+        "list_issues",
+        "list_repo_pull_requests",
+        "get_pull_request",
+    }
 
 
 async def test_tui_loads_tables(monkeypatch, gh):
